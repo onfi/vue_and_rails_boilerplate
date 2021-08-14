@@ -1,0 +1,77 @@
+version: '3'
+services:
+    front:
+        user: $UID:$GID
+        build:
+            context: front
+            target: development
+            args:
+                UID: $UID
+                GID: $GID
+        tty: true
+        volumes:
+            - ./front/src:/var/app/front/src
+            - ./front/public:/var/app/front/public
+            - ./front/tests:/var/app/front/tests
+        ports:
+            - 0.0.0.0:8080:8080
+        command: npm run serve
+    api:
+        user: $UID:$GID
+        build:
+            context: api
+            target: development
+            args:
+                UID: $UID
+                GID: $GID
+        tty: true
+        volumes:
+            - ./api/bin:/var/app/api/bin
+            - ./api/app:/var/app/api/app
+            - ./api/lib:/var/app/api/lib
+            - ./api/public:/var/app/api/public
+            - ./api/test:/var/app/api/test
+            - ./api/tmp:/var/app/api/tmp
+            - ./api/db:/var/app/api/db
+            - ./api/log:/var/app/api/log
+            - ./api/storage:/var/app/api/storage
+            - ./api/vendor:/var/app/api/vendor
+            - ./api/config:/var/app/api/config
+            - ./api/.ruby-version:/var/app/api/.ruby-version
+            - ./api/config.ru:/var/app/api/config.ru
+            - ./api/README.md:/var/app/api/README.md
+            - ./api/Rakefile:/var/app/api/Rakefile
+        ports:
+            - 0.0.0.0:3000:3000
+        command: rails server -b 0.0.0.0
+    mysql:
+        image: mysql:8.0.26
+        environment:
+            MYSQL_ROOT_PASSWORD: password
+            MYSQL_DATABASE: api
+            MYSQL_USER: api
+            MYSQL_PASSWORD: api
+            TZ: 'Asia/Tokyo'
+        volumes:
+            - mysql-data:/var/lib/mysql
+            - ./mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+    mysql_test:
+        image: mysql:8.0.26
+        environment:
+            MYSQL_ROOT_PASSWORD: password
+            MYSQL_DATABASE: api
+            MYSQL_USER: api
+            MYSQL_PASSWORD: api
+            TZ: 'Asia/Tokyo'
+        volumes:
+            - ./mysql/data:/var/lib/mysql
+    nginx:
+        image: nginx:1.21.1
+        volumes:
+            - ./nginx/templates:/etc/nginx/templates
+        ports:
+            - 0.0.0.0:80:80
+        environment:
+            - NGINX_HOST=foobar.com
+volumes:
+    mysql-data:
